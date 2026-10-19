@@ -38,5 +38,8 @@
   "packageManager": "pnpm@12.9.1",
   "description": "Frontend de Ordena tu Pyme: flujo de caja y cuentas por pagar para pymes chilenas",
   "license": "MIT",
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  }
 }

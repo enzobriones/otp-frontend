@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# otp-frontend
 
-## Getting Started
+Frontend de **Ordena tu Pyme**: flujo de caja y cuentas por pagar para pymes chilenas, opensource (MIT). Next.js 16 con Server Components y Server Actions, shadcn/ui (Base UI) y Tailwind 4.
 
-First, run the development server:
+Cliente de [otp-api](https://github.com/enzobriones/otp-api).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Desarrollo
+
+Requiere Node 24 y pnpm 12 (`corepack enable`). Copia `.env.example` a `.env.local` y configura `API_BASE_URL` con la URL de la API incluyendo el prefijo `/v1` (por ejemplo `http://localhost:3000/v1`). Levanta la API por separado y ejecuta `pnpm dev`: el frontend usa el puerto 3001.
+
+## Arquitectura
+
+El navegador no consume la API directamente; `API_BASE_URL` no es una variable pública. Cada módulo accede a la API desde el servidor.
+
+- `src/server/<módulo>/`: Server Actions (`*.actions.ts`) y acceso a la API (`*.api.ts`).
+- `src/constants/*.constants.ts`: constantes (etiquetas, campos de formulario, límites).
+- `src/utils/*.utils.ts`: helpers puros.
+- `src/types/*.types.ts`: tipos por módulo.
+- Solo arrow functions; ESLint lo exige salvo en `src/components/ui` (generado por shadcn).
+
+## Verificación
+
+```sh
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm exec prettier --check "**/*.{ts,tsx}"
+pnpm build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## CI y despliegue
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+GitHub Actions (`.github/workflows/ci.yml`) corre lint, typecheck, prettier, test y build en cada PR y en cada push a `develop` y `main`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Railway, proyecto `ordena-tu-pyme`, servicio `frontend` desplegado desde GitHub tras pasar el CI (Wait for CI). La configuración vive en el dashboard de Railway, no en el repo.
 
-## Learn More
+- `production` ← `main`, `staging` ← `develop`.
+- Railpack detecta pnpm por `pnpm-lock.yaml`, compila con `pnpm build` y arranca con `pnpm start`; Next.js toma el puerto de `PORT`.
+- Variables del servicio:
 
-To learn more about Next.js, take a look at the following resources:
+```text
+NODE_ENV=production
+API_BASE_URL=http://${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}/v1
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`API_BASE_URL` usa la red privada hacia la API del mismo entorno y no lleva `NEXT_PUBLIC_`. Más detalle en la [documentación de despliegue de la API](https://github.com/enzobriones/otp-api/blob/main/docs/DEPLOYMENT.md).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Licencia
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](LICENSE)
